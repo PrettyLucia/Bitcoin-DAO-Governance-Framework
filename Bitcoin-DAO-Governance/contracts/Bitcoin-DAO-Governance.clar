@@ -21,7 +21,7 @@
 (define-constant PROPOSAL_TYPE_PARAMETER_UPDATE u2)
 (define-constant PROPOSAL_TYPE_CONTRACT_UPGRADE u3)
 
-;; Advanced Proposal Structure
+;; Proposal Structure
 (define-map proposals
   {
     proposal-id: uint
@@ -42,6 +42,31 @@
     execution-result: (optional (buff 256)),
     veto-power-activated: bool,
     timelock-expiration: uint
+  }
+)
+
+;; Enhanced Voter Profile with Advanced Features
+(define-map voter-profiles
+  {
+    voter: principal
+  }
+  {
+    base-voting-power: uint,
+    delegated-voting-power: uint,
+    delegated-to: (optional principal),
+    total-delegated-from: (list 10 principal),
+    last-voting-block: uint,
+    reputation-score: uint,
+    slashing-points: uint,
+    vote-history: (list 20 { 
+      proposal-id: uint, 
+      vote-direction: bool, 
+      voting-power: uint 
+    }),
+    specialized-voting-weights: (list 5 { 
+      category: (string-ascii 50), 
+      weight-multiplier: uint 
+    })
   }
 )
 
