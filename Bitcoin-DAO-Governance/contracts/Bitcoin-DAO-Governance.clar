@@ -286,3 +286,12 @@
   }
 )
 
+(define-constant ERR_ALREADY_VOTED (err u12))
+(define-constant ERR_ZERO_VOTE_POWER (err u13))
+(define-constant ERR_PROPOSAL_THRESHOLD_NOT_MET (err u14))
+(define-constant ERR_PROTOCOL_COOLDOWN (err u15))
+(define-constant ERR_INVALID_VETO (err u16))
+(define-constant ERR_CANCELLATION_WINDOW_CLOSED (err u17))
+(define-constant ERR_INVALID_TRANSACTION (err u18))
+(define-constant ERR_NOT_ACTIVE_MEMBER (err u19))
+(define-constant ERR_STAKING_PERIOD_ACTIVE (err u20))
