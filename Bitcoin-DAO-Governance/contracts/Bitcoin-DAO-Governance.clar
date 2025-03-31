@@ -21,3 +21,28 @@
 (define-constant PROPOSAL_TYPE_PARAMETER_UPDATE u2)
 (define-constant PROPOSAL_TYPE_CONTRACT_UPGRADE u3)
 
+;; Advanced Proposal Structure
+(define-map proposals
+  {
+    proposal-id: uint
+  }
+  {
+    proposer: principal,
+    title: (string-ascii 100),
+    description: (string-ascii 500),
+    proposal-type: uint,
+    creation-block: uint,
+    voting-start-block: uint,
+    voting-end-block: uint,
+    execution-block: uint,
+    total-votes-for: uint,
+    total-votes-against: uint,
+    executed: bool,
+    proposal-data: (optional (buff 256)),
+    execution-result: (optional (buff 256)),
+    veto-power-activated: bool,
+    timelock-expiration: uint
+  }
+)
+
+
