@@ -338,3 +338,24 @@
     proposal-id: uint
   }
 )
+
+(define-data-var next-fund-id uint u0)
+(define-data-var community-treasury-balance uint u0)
+
+;; Multi-signature Transaction System
+(define-map multisig-transactions
+  {
+    transaction-id: uint
+  }
+  {
+    creator: principal,
+    contract-to-call: principal,
+    function-to-call: (string-ascii 128),
+    function-args: (list 10 (buff 256)),
+    required-signatures: uint,
+    signers: (list 10 principal),
+    executed: bool,
+    created-at-block: uint,
+    expiration-block: uint
+  }
+)
