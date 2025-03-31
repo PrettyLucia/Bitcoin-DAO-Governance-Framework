@@ -216,3 +216,38 @@
   )
 ))
 
+;; Initial Setup and Configuration
+(define-public (register-voter
+  (initial-voting-power uint)
+  (specialized-categories (optional (list 5 { 
+    category: (string-ascii 50), 
+    weight-multiplier: uint 
+  })))
+)
+  (begin
+    (asserts! (> initial-voting-power u0) ERR_INSUFFICIENT_VOTING_POWER)
+    
+    (map-set voter-profiles
+      { voter: tx-sender }
+      {
+        base-voting-power: initial-voting-power,
+        delegated-voting-power: u0,
+        delegated-to: none,
+        total-delegated-from: (list),
+        last-voting-block: stacks-block-height,
+        reputation-score: u0,
+        slashing-points: u0,
+        vote-history: (list),
+        specialized-voting-weights: (default-to (list) specialized-categories)
+      }
+    )
+    
+    ;; Increment total governance tokens
+    (var-set total-governance-tokens 
+      (+ (var-get total-governance-tokens) initial-voting-power)
+    )
+    
+    (ok true)
+  )
+)
+
