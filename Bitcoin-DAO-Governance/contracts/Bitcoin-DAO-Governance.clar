@@ -251,3 +251,38 @@
   )
 )
 
+;; Initialize Governance Parameters
+(map-set governance-parameters 
+  { param-name: "min-proposal-voting-power" }
+  { 
+    value: u100, 
+    last-updated-block: u0, 
+    update-cooldown: u1440 
+  }
+)
+
+(map-set governance-parameters 
+  { param-name: "proposal-creation-delay" }
+  { 
+    value: u144, 
+    last-updated-block: u0, 
+    update-cooldown: u1440 
+  }
+)
+
+;; Initial Configuration for Contract Owner
+(map-set voter-profiles 
+  { voter: CONTRACT_OWNER }
+  {
+    base-voting-power: u10000,
+    delegated-voting-power: u0,
+    delegated-to: none,
+    total-delegated-from: (list),
+    last-voting-block: u0,
+    reputation-score: u100,
+    slashing-points: u0,
+    vote-history: (list),
+    specialized-voting-weights: (list)
+  }
+)
+
