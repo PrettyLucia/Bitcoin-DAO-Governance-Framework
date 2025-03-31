@@ -473,3 +473,48 @@
     (ok fund-id)
   )
 )
+
+
+(define-public (vote-on-fund-request (fund-id uint) (support bool))
+  (let (
+    (fund-proposal (unwrap! (map-get? community-fund-proposals { fund-id: fund-id })
+                           ERR_INVALID_PROPOSAL))
+    (voter-profile (unwrap! (map-get? voter-profiles { voter: tx-sender }) 
+                           ERR_NOT_ACTIVE_MEMBER))
+    (voting-power (+ (get base-voting-power voter-profile) 
+                     (get delegated-voting-power voter-profile)))
+  )
+    (asserts! (not (var-get emergency-stop-activated)) ERR_EMERGENCY_STOP)
+    (asserts! (> voting-power u0) ERR_INSUFFICIENT_VOTING_POWER)
+    (asserts! (not (get approved fund-proposal)) ERR_VOTING_CLOSED)
+    
+    ;; If supporting, add to votes received
+    (if support
+      (map-set community-fund-proposals
+        { fund-id: fund-id }
+        (merge fund-proposal {
+          votes-received: (+ (get votes-received fund-proposal) u1)
+        })
+      )
+      true
+    )
+    
+    ;; Check if fund request is now approved
+    (let (
+      (updated-fund (unwrap-panic (map-get? community-fund-proposals { fund-id: fund-id })))
+    )
+      (if (and (not (get approved updated-fund))
+               (>= (get votes-received updated-fund) (get votes-needed updated-fund)))
+        (map-set community-fund-proposals
+          { fund-id: fund-id }
+          (merge updated-fund {
+            approved: true
+          })
+        )
+        true
+      )
+    )
+    
+    (ok support)
+  )
+)
