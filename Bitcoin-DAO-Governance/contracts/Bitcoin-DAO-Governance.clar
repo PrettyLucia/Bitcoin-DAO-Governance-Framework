@@ -1,30 +1,218 @@
+;; Expanded Core Constants and Error Definitions
+(define-constant CONTRACT_OWNER tx-sender)
+(define-constant CONTRACT_VERSION u3)
 
-;; title: Bitcoin-DAO-Governance
-;; version:
-;; summary:
-;; description:
+;; Comprehensive Error Codes
+(define-constant ERR_UNAUTHORIZED (err u1))
+(define-constant ERR_INVALID_PROPOSAL (err u2))
+(define-constant ERR_VOTING_CLOSED (err u3))
+(define-constant ERR_INSUFFICIENT_VOTING_POWER (err u4))
+(define-constant ERR_DELEGATION_LIMIT_REACHED (err u5))
+(define-constant ERR_PROPOSAL_EXECUTION_FAILED (err u6))
+(define-constant ERR_EMERGENCY_STOP (err u7))
+(define-constant ERR_INVALID_DELEGATION (err u8))
+(define-constant ERR_TREASURY_INSUFFICIENT_FUNDS (err u9))
+(define-constant ERR_INVALID_UPGRADE (err u10))
+(define-constant ERR_TIMELOCK_ACTIVE (err u11))
 
-;; traits
-;;
+;; Enhanced Proposal Types Enum
+(define-constant PROPOSAL_TYPE_STANDARD u0)
+(define-constant PROPOSAL_TYPE_TREASURY u1)
+(define-constant PROPOSAL_TYPE_PARAMETER_UPDATE u2)
+(define-constant PROPOSAL_TYPE_CONTRACT_UPGRADE u3)
 
-;; token definitions
-;;
+;; Proposal Structure
+(define-map proposals
+  {
+    proposal-id: uint
+  }
+  {
+    proposer: principal,
+    title: (string-ascii 100),
+    description: (string-ascii 500),
+    proposal-type: uint,
+    creation-block: uint,
+    voting-start-block: uint,
+    voting-end-block: uint,
+    execution-block: uint,
+    total-votes-for: uint,
+    total-votes-against: uint,
+    executed: bool,
+    proposal-data: (optional (buff 256)),
+    execution-result: (optional (buff 256)),
+    veto-power-activated: bool,
+    timelock-expiration: uint
+  }
+)
 
-;; constants
-;;
+;; Enhanced Voter Profile with Advanced Features
+(define-map voter-profiles
+  {
+    voter: principal
+  }
+  {
+    base-voting-power: uint,
+    delegated-voting-power: uint,
+    delegated-to: (optional principal),
+    total-delegated-from: (list 10 principal),
+    last-voting-block: uint,
+    reputation-score: uint,
+    slashing-points: uint,
+    vote-history: (list 20 { 
+      proposal-id: uint, 
+      vote-direction: bool, 
+      voting-power: uint 
+    }),
+    specialized-voting-weights: (list 5 { 
+      category: (string-ascii 50), 
+      weight-multiplier: uint 
+    })
+  }
+)
 
-;; data vars
-;;
+;; Treasury Management
+(define-map treasury-accounts
+  {
+    account: principal
+  }
+  {
+    balance: uint,
+    allowed-categories: (list 5 (string-ascii 50)),
+    last-withdrawal-block: uint
+  }
+)
 
-;; data maps
-;;
+;; Advanced Voting and Delegation Mechanisms
+(define-map proposal-votes
+  {
+    proposal-id: uint,
+    voter: principal
+  }
+  {
+    vote-power: uint,
+    vote-direction: bool,
+    voted-at-block: uint,
+    quadratic-weight: uint,
+    specialized-category-votes: (list 5 { 
+      category: (string-ascii 50), 
+      vote-weight: uint 
+    })
+  }
+)
 
-;; public functions
-;;
+;; Governance Parameters Management
+(define-map governance-parameters
+  {
+    param-name: (string-ascii 50)
+  }
+  {
+    value: uint,
+    last-updated-block: uint,
+    update-cooldown: uint
+  }
+)
 
-;; read only functions
-;;
+;; Contract Upgrade Mechanism
+(define-map contract-upgrades
+  {
+    upgrade-id: uint
+  }
+  {
+    new-contract-address: principal,
+    proposed-by: principal,
+    upgrade-block: uint,
+    approved: bool,
+    implementation-details: (optional (string-ascii 500))
+  }
+)
 
-;; private functions
-;;
+;; Emergency and Governance Controls
+(define-data-var emergency-stop-activated bool false)
+(define-data-var governance-pause-threshold uint u3)
+(define-data-var total-governance-tokens uint u0)
+(define-data-var next-proposal-id uint u0)
+(define-data-var next-upgrade-id uint u0)
+
+;; Treasury Management System
+(define-public (create-treasury-account
+  (initial-balance uint)
+  (allowed-categories (list 5 (string-ascii 50)))
+)
+  (begin
+    (asserts! (not (var-get emergency-stop-activated)) ERR_EMERGENCY_STOP)
+    
+    (map-set treasury-accounts 
+      { account: tx-sender }
+      {
+        balance: initial-balance,
+        allowed-categories: allowed-categories,
+        last-withdrawal-block: stacks-block-height
+      }
+    )
+    
+    (ok true)
+  ))
+
+;; Governance Parameters Management
+(define-private (get-governance-parameters)
+  {
+    min-proposal-voting-power: (default-to u100 
+      (get value (map-get? governance-parameters { param-name: "min-proposal-voting-power" }))),
+    proposal-creation-delay: (default-to u144 
+      (get value (map-get? governance-parameters { param-name: "proposal-creation-delay" }))),
+    proposal-voting-duration: (default-to u1440 
+      (get value (map-get? governance-parameters { param-name: "proposal-voting-duration" }))),
+    proposal-execution-delay: (default-to u288 
+      (get value (map-get? governance-parameters { param-name: "proposal-execution-delay" }))),
+    treasury-withdrawal-cooldown: (default-to u576 
+      (get value (map-get? governance-parameters { param-name: "treasury-withdrawal-cooldown" })))
+  }
+)
+
+;; Voter History Management
+(define-private (update-voter-proposal-history
+  (voter principal)
+  (proposal-id uint)
+)
+  (let (
+    (current-profile (unwrap-panic (map-get? voter-profiles { voter: voter })))
+  )
+  (map-set voter-profiles
+    { voter: voter }
+    (merge current-profile {
+      reputation-score: (+ (get reputation-score current-profile) u10)
+    })
+  )
+))
+
+(define-private (update-voter-vote-history
+  (voter principal)
+  (proposal-id uint)
+  (vote-direction bool)
+  (voting-power uint)
+)
+  (let (
+    (current-profile (unwrap-panic (map-get? voter-profiles { voter: voter })))
+    (new-vote-history { 
+      proposal-id: proposal-id, 
+      vote-direction: vote-direction, 
+      voting-power: voting-power 
+    })
+  )
+  (map-set voter-profiles
+    { voter: voter }
+    (merge current-profile {
+      vote-history: (unwrap-panic 
+        (as-max-len? 
+          (append (get vote-history current-profile) new-vote-history) 
+          u20
+        )
+      ),
+      reputation-score: (if vote-direction 
+        (+ (get reputation-score current-profile) u5)
+        (- (get reputation-score current-profile) u2)
+      )
+    })
+  )
+))
 
