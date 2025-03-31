@@ -375,3 +375,25 @@
     special-rights: (list 5 (string-ascii 50))
   }
 )
+
+;; Protocol Cooldown System
+(define-map protocol-actions
+  {
+    action-type: (string-ascii 50)
+  }
+  {
+    last-executed: uint,
+    cooldown-period: uint,
+    calls-in-period: uint,
+    max-calls-in-period: uint
+  }
+)
+
+;; Quadratic Voting Implementation
+(define-private (calculate-quadratic-vote-power (base-power uint))
+  (let (
+    (sqrt-power (sqrti base-power))
+  )
+    sqrt-power
+  )
+)
