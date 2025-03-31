@@ -359,3 +359,19 @@
     expiration-block: uint
   }
 )
+
+(define-data-var next-transaction-id uint u0)
+
+;; Reputation and Governance Tiers
+(define-map governance-tiers
+  {
+    tier-level: uint
+  }
+  {
+    name: (string-ascii 50),
+    min-reputation: uint,
+    voting-power-multiplier: uint,
+    proposal-discount: uint,
+    special-rights: (list 5 (string-ascii 50))
+  }
+)
