@@ -14,3 +14,10 @@
 (define-constant ERR_TREASURY_INSUFFICIENT_FUNDS (err u9))
 (define-constant ERR_INVALID_UPGRADE (err u10))
 (define-constant ERR_TIMELOCK_ACTIVE (err u11))
+
+;; Enhanced Proposal Types Enum
+(define-constant PROPOSAL_TYPE_STANDARD u0)
+(define-constant PROPOSAL_TYPE_TREASURY u1)
+(define-constant PROPOSAL_TYPE_PARAMETER_UPDATE u2)
+(define-constant PROPOSAL_TYPE_CONTRACT_UPGRADE u3)
+
