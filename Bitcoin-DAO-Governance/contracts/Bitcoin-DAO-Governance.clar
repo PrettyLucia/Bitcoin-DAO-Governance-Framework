@@ -100,5 +100,30 @@
   }
 )
 
+;; Governance Parameters Management
+(define-map governance-parameters
+  {
+    param-name: (string-ascii 50)
+  }
+  {
+    value: uint,
+    last-updated-block: uint,
+    update-cooldown: uint
+  }
+)
+
+;; Contract Upgrade Mechanism
+(define-map contract-upgrades
+  {
+    upgrade-id: uint
+  }
+  {
+    new-contract-address: principal,
+    proposed-by: principal,
+    upgrade-block: uint,
+    approved: bool,
+    implementation-details: (optional (string-ascii 500))
+  }
+)
 
 
