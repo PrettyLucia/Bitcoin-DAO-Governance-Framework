@@ -70,4 +70,35 @@
   }
 )
 
+;; Treasury Management
+(define-map treasury-accounts
+  {
+    account: principal
+  }
+  {
+    balance: uint,
+    allowed-categories: (list 5 (string-ascii 50)),
+    last-withdrawal-block: uint
+  }
+)
+
+;; Advanced Voting and Delegation Mechanisms
+(define-map proposal-votes
+  {
+    proposal-id: uint,
+    voter: principal
+  }
+  {
+    vote-power: uint,
+    vote-direction: bool,
+    voted-at-block: uint,
+    quadratic-weight: uint,
+    specialized-category-votes: (list 5 { 
+      category: (string-ascii 50), 
+      vote-weight: uint 
+    })
+  }
+)
+
+
 
