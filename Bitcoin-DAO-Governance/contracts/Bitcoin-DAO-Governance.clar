@@ -397,3 +397,79 @@
     sqrt-power
   )
 )
+
+(define-public (unstake-tokens (amount uint))
+  (let (
+    (staking-position (unwrap! (map-get? staking-positions { staker: tx-sender }) 
+                               ERR_NOT_ACTIVE_MEMBER))
+  )
+    (asserts! (not (var-get emergency-stop-activated)) ERR_EMERGENCY_STOP)
+    (asserts! (<= amount (get amount staking-position)) ERR_INSUFFICIENT_VOTING_POWER)
+    (asserts! (<= stacks-block-height (get locked-until-block staking-position)) 
+              ERR_STAKING_PERIOD_ACTIVE)
+    
+    (map-set staking-positions
+      { staker: tx-sender }
+      (merge staking-position {
+        amount: (- (get amount staking-position) amount)
+      })
+    )
+    
+    ;; Update voter profile
+    (let (
+      (voter-profile (unwrap-panic (map-get? voter-profiles { voter: tx-sender })))
+    )
+      (map-set voter-profiles
+        { voter: tx-sender }
+        (merge voter-profile {
+          base-voting-power: (- (get base-voting-power voter-profile) amount)
+        })
+      )
+    )
+    
+    (ok true)
+  )
+)
+
+;; Community Fund Functions
+(define-public (submit-fund-request
+  (requested-amount uint)
+  (category (string-ascii 50))
+  (milestones (list 5 {
+    description: (string-ascii 100),
+    amount: uint,
+    completed: bool
+  }))
+)
+  (let (
+    (fund-id (var-get next-fund-id))
+    (params (get-governance-parameters))
+    (voter-profile (unwrap! (map-get? voter-profiles { voter: tx-sender }) ERR_NOT_ACTIVE_MEMBER))
+    (tier-voting-threshold (default-to u10 
+      (get value (map-get? governance-parameters { param-name: "fund-request-votes-needed" }))))
+  )
+    (asserts! (not (var-get emergency-stop-activated)) ERR_EMERGENCY_STOP)
+    (asserts! (>= (get reputation-score voter-profile) u50) ERR_INSUFFICIENT_VOTING_POWER)
+    (asserts! (> requested-amount u0) ERR_ZERO_VOTE_POWER)
+    
+    ;; Create fund request
+    (map-set community-fund-proposals
+      { fund-id: fund-id }
+      {
+        applicant: tx-sender,
+        requested-amount: requested-amount,
+        category: category,
+        milestones: milestones,
+        approved: false,
+        votes-needed: tier-voting-threshold,
+        votes-received: u0,
+        proposal-id: u0
+      }
+    )
+    
+    ;; Increment fund ID counter
+    (var-set next-fund-id (+ fund-id u1))
+    
+    (ok fund-id)
+  )
+)
